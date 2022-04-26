@@ -5,7 +5,7 @@ Welcome to the Beginner's Crash Course to Elastic Stack!
 
 This repo contains all resources shared during Part 2: Understanding the relevance of your search with Elasticsearch and Kibana.
 
-By the end of this workshop, you will: 
+By the end of this repo, you will: 
 - learn how Precision and Recall are used to measure how well Elastic search engine is searching
 - understand how scoring is used to rank the relevance of your search results in Elasticsearch
 - master how to send search queries from Kibana to Elasticsearch to finetune Precision or Recall of your search results
@@ -15,27 +15,9 @@ By the end of this workshop, you will:
 
 [Beginner's Crash Course to Elastic Stack Table of Contents](https://github.com/LisaHJung/Beginners-Crash-Course-to-the-Elastic-Stack-Series) This workshop is a part of the Beginner's Crash Course to Elastic Stack series. Check out this table contents to access all the workshops in the series thus far. This table will continue to get updated as more workshops in the series are released! 
 
-[Free Elastic Cloud Trial](https://ela.st/elastic-beginners)
-
 [Instructions](https://dev.to/lisahjung/beginner-s-guide-to-setting-up-elasticsearch-and-kibana-with-elastic-cloud-1joh) on how to access Elasticsearch and Kibana on Elastic Cloud
 
 [Instructions](https://dev.to/elastic/downloading-elasticsearch-and-kibana-macos-linux-and-windows-1mmo) for downloading Elasticsearch and Kibana
-
-[Video](https://www.youtube.com/watch?v=CCTgroOcyfM) of the workshop
-
-[Mini Beginner's Crash Course to Elasticsearch & Kibana playlist](https://ela.st/mini-beginners-crash-course)
-
-Do you prefer learning by watching shorter videos? Check out this playlist to watch short clips of beginner's crash course full length workshops. Part 2 workshop is broken down into episodes 7-10. Season 2 clips will be uploaded here in the future! 
-
-[Presentation](https://github.com/LisaHJung/Part-1.2-Understanding-the-relevance-of-your-search-with-Elasticsearch-and-Kibana-/blob/main/Part%201.2%20Understanding%20the%20relevance%20of%20your%20search%20with%20Elasticsearch%20and%20Kibana%20-%20Beginner's%20Crash%20Course%20to%20the%20Elastic%20Stack%20Series%20-%20.pdf)
-
-[News Headlines Dataset](https://www.kaggle.com/rmisra/news-category-dataset)
-
-[Blog](https://dev.to/lisahjung/beginner-s-guide-to-understanding-the-relevance-of-your-search-with-elasticsearch-and-kibana-29n6) on understanding the relevance of your search with Elasticsearch and Kibana
-
-[Elastic America Virtual Chapter](https://community.elastic.co/amer-virtual/) Want to attend live workshops? Join the Elastic America Virtual Chapter to get the deets!
-
-[What's next?](https://github.com/LisaHJung/Part-3-Running-full-text-queries-and-combined-queries-with-Elasticsearch-and-Kibana) Eager to continue your learning after mastering the concept from this workshop? Move on to Part 3: Running full text queries and combined queries with Elasticsearch and Kibana [here](https://github.com/LisaHJung/Part-3-Running-full-text-queries-and-combined-queries-with-Elasticsearch-and-Kibana)!
 
 ## Search for information
 There are two main ways to search in Elasticsearch:
