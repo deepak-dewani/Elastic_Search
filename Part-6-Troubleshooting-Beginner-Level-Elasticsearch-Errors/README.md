@@ -1,494 +1,493 @@
 # Beginner's Crash Course to Elastic Stack Series
-## Part 5: Understanding Mapping with Elasticsearch and Kibana
+## Part 6: Troubleshooting Beginner Level Elasticsearch Errors
+
 Welcome to the Beginner's Crash Course to Elastic Stack!
 
-This repo contains all resources shared during Part 5: Understanding Mapping with Elasticsearch and Kibana.
+This repo contains all resources shared during Part 6: Troubleshooting Beginner-Level Elasticsearch Errors!
 
-Have you ever encountered the error “Field type is not supported for [whatever you are trying to do with Elasticsearch]”?
+Throughout the series, we have learned about CRUD operations, fine tuning the relevance of your search, full text search, aggregations, and mapping. 
 
-The most likely culprit of this error is the mapping of your index!
+As you continue your journey with Elasticsearch, you will inevitably encounter some common errors associated with the topics we have covered in the series. 
 
-Mapping is the process of defining how a document and its fields are indexed and stored. It defines the type and format of the fields in the documents. As a result, mapping can significantly affect how Elasticsearch searches and stores data.
+Learn how to troubleshoot these pesky errors so you can get unstuck! 
 
-Understanding how mapping works will help you define mapping that best serves your use case.
-
-By the end of this workshop, you will be able to define what a mapping is and define your own mapping to make indexing and searching more efficient. 
-
-## Resources
-This workshop is a part of the Beginner's Crash Course to Elastic Stack series. Check out this table contents to access all the workshops in the series thus far. This table will continue to get updated as more workshops in the series are released! 
+## Resources 
+This workshop is a part of the Beginner's Crash Course to Elastic Stack series. Check out this table contents to access all the workshops in the series. 
 
 [Instructions](https://dev.to/lisahjung/beginner-s-guide-to-setting-up-elasticsearch-and-kibana-with-elastic-cloud-1joh) on how to access Elasticsearch and Kibana on Elastic Cloud
 
 [Instructions](https://dev.to/elastic/downloading-elasticsearch-and-kibana-macos-linux-and-windows-1mmo) for downloading Elasticsearch and Kibana
 
-## What is a Mapping?
-![image](https://user-images.githubusercontent.com/60980933/121580875-7953d700-c9ea-11eb-8a4c-015ea238540e.png)
+## Want To Troubleshoot Your Errors? Follow The Clues! 
 
-## Review from Previous Workshops
-![image](https://user-images.githubusercontent.com/60980933/121580744-55909100-c9ea-11eb-98fe-8c8491b0a7a1.png)
+Whenever you perform an action with Elasticsearch and Kibana, Elasticsearch responds with an HTTP status and a response body. 
 
-### Indexing a Document
-The following request will index the following document.  
+The request below asks Elasticsearch to index a document and assign it an id of 1. 
+
+![image](https://user-images.githubusercontent.com/60980933/125672998-51ecff9f-50cb-488a-ac02-374ed3a8eb6e.png)
+
+The HTTP status of 201-success indicates that the document has been successfully created. The response body indicates that the document with an assigned id of 1 has been created in the `beginners_crash_course` index. 
+
+As we work with Elasticsearch, we will inevitably encounter error messages like the one below.  
+
+![image](https://user-images.githubusercontent.com/60980933/126246186-aabff03e-445b-4ff6-848b-5454085c02d3.png)
+
+When this happens, the HTTP status and the response body will provide valuable clues about why the request failed! 
+
+### Common Errors
+
+Here are some common errors that you may encounter as you work with Elasticsearch. 
+
+#### Unable to connect
+The cluster may be down or it may be a network issue. Check the network status and cluster health to identify the problem. 
+#### Connection unexpectedly closed
+The node may have died or it may be a network issue. Retry your request. 
+#### 5XX Errors
+Errors with an HTTP status starting with 5 stems from internal server error in Elasticsearch. When you see this error, take a look at the Elasticsearch log and identify the problem. 
+#### 4XX Errors
+Errors with an HTTP status starting with 4 stems from client errors. When you see this error, correct the request before retrying. 
+
+As beginners, we are still familiarizing ourselves with the rules and syntax required to communicate with Elasticsearch. Majority of the error messages we encouter are likely to have been caused by the mistakes we make while writing our requests(4XX errors).   
+
+**To strengthen our understanding of the requests we have learned throughout the series, we will only focus on 4XX errors during this workshop.** 
+
+## Thought Process For Troubleshooting Errors
+1. What number does the HTTP status start with(4XX? 5XX?)
+2. What does the response say? Always read the full message!
+3. Use the [Elasticsearch documentation](https://www.elastic.co/guide/index.html) as your guide. Compare your request with the example from the documentation. Identify the mistake and make appropriate changes.
+
+**At times, you will encounter error messages that are not very helpful. We will go over a couple of these and see how we can troubleshoot these types of errors.**
+
+## Trip Down Memory Lane
+Throughout the series, we learned how to send requests related to the following topics:
+
+1. CRUD operations
+2. Queries
+3. Aggregations
+4. Mapping
+
+We will revisit each topic and troubleshoot common errors you may encounter as you explore each topic. 
+
+## Errors Associated With CRUD Operations
+
+### Error 1: 404 No such index[x]
+
+In [Part 1: Intro to Elasticsearch and Kibana](https://github.com/LisaHJung/Part-1-Intro-to-Elasticsearch-and-Kibana), we learned how to perform CRUD operations. Let's say we have sent the following request to retrieve a document with an id of 1 from the `common_errors` index.
+
+Request sent: 
+```
+GET common_errors/_doc/1
+```
+
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 404-error along with the cause of the error in the response body. The HTTP status starts with a 4, meaning that there was a client error with the request sent.
+
+![image](https://user-images.githubusercontent.com/60980933/125688779-16b15f58-3bab-4ef4-ab00-aaa8d9490603.png)
+
+When you look at the response body, Elasticsearch lists the reason(line 6) as "no such index [common_errors]". 
+
+The two possible explanations for this error are:
+1. The index `common_errors` truly does not exist or was deleted
+2. We do not have the correct index name
+
+### Cause of Error 1
+
+In our example, the cause of the error is quite clear! We have not created an index called `common_errors` and we were trying to retrieve a document from an index that does not exist. 
+
+Let's create an index called `common_errors`:
+
+Syntax:
+```
+PUT Name-of-the-Index
+```
+Example:
+```
+PUT common_errors
+```
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 200-success HTTP status acknowledging that the index `common_errors` has been successfully created. 
+
+![image](https://user-images.githubusercontent.com/60980933/125689096-3e42b998-1a52-4b76-b3ca-8ed438e0716a.png)
+
+### Error 2: 405 Incorrect HTTP method for uri, allowed: [x]
+
+Now that we have created the index `common_errors`, let's index a document!
+
+Suppose you have remembered that you could use the HTTP verb PUT to index a document and send the following request: 
+```
+PUT common_errors/_doc
+{
+  "source_of_error": "Using the wrong syntax for PUT or POST indexing request"
+}
+```
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 405-error along with the cause of the error in the response body. This HTTP status starts with a 4, meaning that there was a client error with the request sent.
+
+If you look at the response, Elasticsearch lists the reason as "Incorrect HTTP method for uri... and method: [PUT], allowed:[POST]". 
+
+![image](https://user-images.githubusercontent.com/60980933/126228111-3f551439-1af7-49d8-a5c9-1f141afb4325.png)
+
+### Cause of Error 2 
+This error message suggests that we used the wrong HTTP verb to index this document. 
+
+You can use either PUT or POST HTTP verb to index a document. Each HTTP verb serves a different purpose and requires a different syntax. 
+
+We learned about the difference between the two verbs during [Part 1: Intro to Elasticsearch and Kibana](https://github.com/LisaHJung/Part-1-Intro-to-Elasticsearch-and-Kibana) under the `Index a document` section.  
+
+**When indexing a document, HTTP verb PUT or POST can be used.** 
+
+**The HTTP verb PUT is used when you want to assign a specific id to your document.** 
 
 Syntax: 
 ```
-POST Enter-name-of-the-index/_doc
+PUT name-of-the-Index/_doc/id-you-want-to-assign-to-this-document
 {
-  "field": "value"
+  field_name: "value"
 }
 ```
-Example: 
+
+Let's compare the syntax to the request we just sent: 
 ```
-POST temp_index/_doc
+PUT common_errors/_doc
 {
-  "name": "Pineapple",
-  "botanical_name": "Ananas comosus",
-  "produce_type": "Fruit",
-  "country_of_origin": "New Zealand",
-  "date_purchased": "2020-06-02T12:15:35",
-  "quantity": 200,
-  "unit_price": 3.11,
-  "description": "a large juicy tropical fruit consisting of aromatic edible yellow flesh surrounded by a tough segmented skin and topped with a tuft of stiff leaves.These pineapples are sourced from New Zealand.",
-  "vendor_details": {
-    "vendor": "Tropical Fruit Growers of New Zealand",
-    "main_contact": "Hugh Rose",
-    "vendor_location": "Whangarei, New Zealand",
-    "preferred_vendor": true
+  "source_of_error": "Using the wrong syntax for PUT or POST indexing request"
+}
+```
+
+You will see that our request uses the HTTP verb PUT but it does not include the document id we want to assign to this document. 
+
+If you add the id of the document to the request as seen below, you will see that the request is carried out without a hitch!
+
+Correct example for PUT indexing request: 
+```
+PUT common_errors/_doc/1
+{
+  "source_of_error": "Using the wrong syntax for PUT or POST indexing request"
+}
+```
+
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 201-success HTTP status acknowledging that document 1 has been successfully created. 
+
+![image](https://user-images.githubusercontent.com/60980933/125692563-c379ea40-b571-4cbd-a77d-ce18bcf1a306.png)
+
+**The HTTP verb POST is used when you want Elasticsearch to autogenerate an id for the document.** 
+
+If this is the option you wanted, you could fix the error message by replacing the verb PUT with POST and not including the document id after the document endpoint. 
+
+Syntax:
+```
+POST Name-of-the-Index/_doc
+{
+  field_name: "value"
+}
+```
+
+Correct example for POST indexing request:
+```
+POST common_errors/_doc
+{
+  "source_of_error": "Using the wrong syntax for PUT or POST indexing request"
+}
+```
+Expected response from Elasticsearch: 
+
+Elasticsearch returns a 201-success HTTP status and autogenerates an id(line 4) for the document that was indexed.
+
+![image](https://user-images.githubusercontent.com/60980933/125692819-fd0e12d6-befc-40b3-8686-b4fe0c6c3bb5.png)
+
+### Error 3: 400 Unexpected Character: was expecting a comma to separate Object entries at [Source: ...] line: x
+
+Suppose you wanted to update document 1 by adding the fields "error" and "solution" as seen in the example.
+
+Example:
+```
+POST common_errors/_update/1
+{
+  "doc": {
+    "error": "405 Method Not Allowed"
+    "solution": "Look up the syntax of PUT and POST indexing requests and use the correct syntax."
+  }
+}
+```
+
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP error starts with a 4, meaning that there was a client error with the request sent.
+
+![image](https://user-images.githubusercontent.com/60980933/125700599-a20b223d-59cb-4cc8-85f5-0c18947eb33b.png)
+
+### Cause of Error 3 
+
+If you look at the response, Elasticsearch lists the error type(line 12) as "json_parse_exception" and the reason(line 13) as "...was expecting comma to separate Object entries at ... line: 4]". 
+
+In Elasticsearch, if you have multiple fields("errors" and "solution") in an object("doc"), you must separate each field with a comma. The error message tells us that we need to add a comma between the fields "error" and "solution".
+
+Add the comma as shown below and send the following request:
+```
+POST common_errors/_update/1
+{
+  "doc": {
+    "error": "405 Method Not Allowed",
+    "solution": "Look up the syntax of PUT and POST indexing requests and use the correct syntax."
   }
 }
 ```
 Expected response from Elasticsearch:
 
-Elasticsearch will confirm that this document has been successfully indexed into the temp_index. 
-![image](https://user-images.githubusercontent.com/60980933/120387213-d5ca3e80-c2e6-11eb-8ca8-731222174724.png)
+You will see that the document with an id of 1 has been successfully updated. 
 
-## Mapping Explained
-Mapping determines how a document and its fields are indexed and stored by defining the type of each field.  
+![image](https://user-images.githubusercontent.com/60980933/125700703-a85dd86f-2e87-4eee-a2c3-48d253d91cd0.png)
 
-![image](https://user-images.githubusercontent.com/60980933/121219417-e7f53100-c840-11eb-9848-7acb3df84227.png)
+## Errors Associated With Sending Queries
 
-It contains a list of the names and types of fields in an index. Depending on its type, each field is indexed and stored differently in Elasticsearch.  
+In parts [2](https://github.com/LisaHJung/Part-2-Understanding-the-relevance-of-your-search-with-Elasticsearch-and-Kibana-) and [3](https://github.com/LisaHJung/Part-3-Running-full-text-queries-and-combined-queries-with-Elasticsearch-and-Kibana), we learned how to send queries about news headlines in our index.
 
-### Dynamic Mapping
-When a user does not define mapping in advance, Elasticsearch creates or updates the mapping as needed by default. This is known as `dynamic mapping`. 
+As a prerequisite part of these workshops, we added a news headlines dataset to an index we named as `news_headlines`. 
 
-![image](https://user-images.githubusercontent.com/60980933/121590398-83c79e00-c9f5-11eb-95f8-e32654447359.png)
+We sent various queries to retrieve documents that match the criteria.  Let's go over common errors you may encounter while working with these queries. 
 
-With `dynamic mapping`, Elasticsearch looks at each field and tries to infer the data type from the field content. Then, it assigns a type to each field and creates a list of field names and types known as mapping.  
+### Error 4: 400 [x] query does not support [y]
 
-Depending on the assigned field type, each field is indexed and primed for different types of requests(full text search, aggregations, sorting). This is why mapping plays an important role in how Elasticsearch stores and searches for data. 
+Suppose you want to use the range query to pull up news headlines published within a specific date range. 
 
-### View the Mapping 
-Syntax:
+You have sent the following request:
 ```
-GET Enter_name_of_the_index_here/_mapping
-```
-Example:
-```
-GET temp_index/_mapping
-```
-Expected response from Elasticsearch:
-
-Elasticsearch returns the mapping of the temp_index. It lists all the fields of the document in an alphabetical order and lists the type of each field(text, keyword, long, float, date, boolean and etc). 
-
-![image](https://user-images.githubusercontent.com/60980933/121591969-5c71d080-c9f7-11eb-95dc-70f04276929a.png)
-![image](https://user-images.githubusercontent.com/60980933/121592051-76131800-c9f7-11eb-8820-d3d2b39e1e4f.png)
-![image](https://user-images.githubusercontent.com/60980933/121592106-83c89d80-c9f7-11eb-97fc-56d23b0242ae.png)
-
-For the list of all field types, click [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html)!
-
-### Indexing Strings 
-There are two kinds of string field types:
-1. Text
-2. Keyword
-
-By default, every string gets mapped twice as a text field and as a keyword multi-field. Each field type is primed for different types of requests. 
-
-`Text` field type is designed for full-text searches. 
-
-`Keyword`field type is designed for exact searches, aggregations, and sorting.
-
-You can customize your mapping by assigning the field type as either text or keyword or both! 
-
-#### Text Field Type
-##### Text Analysis
-Ever notice that when you search in Elasticsearch, it is not case sensitive or punctuation does not seem to matter? This is because `text analysis` occurs when your fields are indexed. 
-
-By default, strings are analyzed when it is indexed. The string is broken up into individual words also known as tokens. The analyzer further lowercases each token and removes punctuations. 
-
-![image](https://user-images.githubusercontent.com/60980933/120847933-672cf100-c531-11eb-9b9c-522c354b0e10.png)
-
-**Inverted Index**
-![image](https://user-images.githubusercontent.com/60980933/121099236-b33b9800-c7b4-11eb-837b-a914ed8e3725.png)
-Once the string is analyzed, the individual tokens are stored in a sorted list known as the `inverted index`. Each unique token is stored in the `inverted index` with its associated ID. 
-
-The same process occurs every time you index a new document. 
-
-![image](https://user-images.githubusercontent.com/60980933/122119940-0d58e080-cde7-11eb-903b-54a628b8de60.png)
-![image](https://user-images.githubusercontent.com/60980933/122119962-147fee80-cde7-11eb-915e-3531c405a315.png)
-![image](https://user-images.githubusercontent.com/60980933/122119979-19dd3900-cde7-11eb-86e4-274b5e44fec2.png)
-![image](https://user-images.githubusercontent.com/60980933/122120075-324d5380-cde7-11eb-9b4e-744dfa6d527d.png)
-
-#### Keyword Field Type
-`Keyword` field type is used for aggregations, sorting, and exact searches. These actions look up the document ID to find the values it has in its fields. 
-
-`Keyword` field is suited to perform these actions because it uses a data structure called `doc values` to store data. 
-
-For each document, the document id along with the field value(original string) are added to the table. This data structure(`doc values`) is designed for actions that require looking up the document ID to find the values it has in its fields.
-
-![image](https://user-images.githubusercontent.com/60980933/121603436-fccef180-ca05-11eb-817e-cb77b46ae969.png)
-
-When Elasticsearch dynamically creates a mapping for you, it does not know what you want to use a string for so it maps all strings to both field types. 
-
-In cases where you do not need both field types, the default setting is wasteful. Since both field types require creating either an inverted index or doc values, creating both field types for unnecessary fields will slow down indexing and take up more disk space.
-
-This is why we define our own mapping as it helps us store and search data more efficiently.
-
-### Mapping Exercise
-
-**Project**: Build an app for a client who manages a produce warehouse 
-
-**This app must enable users to:** 
-1. search for produce name, country of origin and description
-
-2. identify top countries of origin with the most frequent purchase history
-
-3. sort produce by produce type(Fruit or Vegetable)
-
-4. get the summary of monthly expense
-
-**Sample data**
-```
+GET news_headlines/_search
 {
-  "name": "Pineapple",
-  "botanical_name": "Ananas comosus",
-  "produce_type": "Fruit",
-  "country_of_origin": "New Zealand",
-  "date_purchased": "2020-06-02T12:15:35",
-  "quantity": 200,
-  "unit_price": 3.11,
-  "description": "a large juicy tropical fruit consisting of aromatic edible yellow flesh surrounded by a tough segmented skin and topped with a tuft of stiff leaves.These pineapples are sourced from New Zealand.",
-  "vendor_details": {
-    "vendor": "Tropical Fruit Growers of New Zealand",
-    "main_contact": "Hugh Rose",
-    "vendor_location": "Whangarei, New Zealand",
-    "preferred_vendor": true
+  "query": {
+    "range": {
+      "date": 
+        "gte": "2015-06-20",
+        "lte": "2015-09-22"
+    }
   }
 }
 ```
-**Plan of Action**
-![image](https://user-images.githubusercontent.com/60980933/121710560-f89ee480-ca96-11eb-98c5-ba9a535e4360.png)
-![image](https://user-images.githubusercontent.com/60980933/122120548-cc150080-cde7-11eb-8613-a4ec5a5c115e.png)
-![image](https://user-images.githubusercontent.com/60980933/121604184-4c61ed00-ca07-11eb-84f8-208c3e927a08.png)
-![image](https://user-images.githubusercontent.com/60980933/122100555-8ac52680-cdd0-11eb-843f-556fa5313e15.png)
-![image](https://user-images.githubusercontent.com/60980933/121749036-3b78b080-cac7-11eb-8706-561a1bb61315.png)
-![image](https://user-images.githubusercontent.com/60980933/121749523-09b41980-cac8-11eb-8214-e986760e5d96.png)
-![image](https://user-images.githubusercontent.com/60980933/122100826-d972c080-cdd0-11eb-995c-048e6709ef57.png)
 
-### Defining your own mapping
-**Rules**
-1. If you do not define a mapping ahead of time, Elasticsearch dynamically creates the mapping for you.
-2. If you do decide to define your own mapping, you can do so at index creation.
-3. ONE mapping is defined per index. Once the index has been created, we can only add *new* fields to a mapping. We CANNOT change the mapping of an *existing* field. 
-4. If you must change the type of an existing field, you must create a new index with the desired mapping, then reindex all documents into the new index. 
+Expected response from Elasticsearch: 
 
-**Step 1: Index a sample document into a test index.**
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP status starts with a 4, meaning that there was a client error with the request sent.
 
-The sample document must contain the fields that you want to define. These fields must also contain values that map closely to the field types you want. 
+![image](https://user-images.githubusercontent.com/60980933/125383609-e5f92300-e354-11eb-8fb4-55ac08e5ecf8.png)
 
-Syntax:
+If you look at the response, Elasticsearch lists the error type(line 5) as "parsing_exception" and the reason(line 6) as "[range] query does not support [date]". 
+
+This error message is misleading as the range query should be able to retrieve documents that contain terms within a provided range. It should not matter that you have requested to run a range query against the field "date".
+
+Let's check out the screenshots from the [Elastic documentation on the range query](https://www.elastic.co/guide/en/elasticsearch/reference/7.9/query-dsl-range-query.html) to see what is going on. 
+
+Pay attention to the syntax of the range query line by line.
+
+**Screenshot from the documentation:**
+![image](https://user-images.githubusercontent.com/60980933/126231182-12f7e6d6-a29d-4076-8b12-4d8bb5f83b86.png)
+
+Compare this syntax to the request we have sent earlier:
 ```
-POST Name-of-test-index/_doc
+GET news_headlines/_search
 {
-  "field": "value"
-}
-```
-Example:
-```
-POST test_index/_doc
-{
-  "name": "Pineapple",
-  "botanical_name": "Ananas comosus",
-  "produce_type": "Fruit",
-  "country_of_origin": "New Zealand",
-  "date_purchased": "2020-06-02T12:15:35",
-  "quantity": 200,
-  "unit_price": 3.11,
-  "description": "a large juicy tropical fruit consisting of aromatic edible yellow flesh surrounded by a tough segmented skin and topped with a tuft of stiff leaves.These pineapples are sourced from New Zealand.",
-  "vendor_details": {
-    "vendor": "Tropical Fruit Growers of New Zealand",
-    "main_contact": "Hugh Rose",
-    "vendor_location": "Whangarei, New Zealand",
-    "preferred_vendor": true
+  "query": {
+    "range": {
+      "date": 
+        "gte": "2015-06-20",
+        "lte": "2015-09-22"
+    }
   }
 }
 ```
-Expected response from Elasticsearch:
+### Cause of Error 4
 
-The test_index is successfully created. 
-![image](https://user-images.githubusercontent.com/60980933/121616770-c81c6380-ca20-11eb-9f3a-593e61eff319.png)
+The culprit of this error is the range query syntax!
 
-**Step 2: View the dynamic mapping** 
+Our request is missing curly brackets around the inner fields("gte" and "lte") of the field "date".
 
-Syntax:
+Let's add the curly brackets as shown below and send the following request:
+
 ```
-GET Name-the-index-whose-mapping-you-want-to-view/_mapping
-```
-
-Example:
-```
-GET test_index/_mapping
-```
-Expected response from Elasticsearch:
-
-Elasticsearch will display the mapping it has created. It lists the fields in an alphabetical order. This document is identical to the one we indexed into the temp_index. To save space, the screenshots of the mapping has not been included here. 
-
-**Step 3: Edit the mapping**
-
-Copy and paste the mapping from step 2 into the Kibana console. From the pasted results, remove the "test_index" along with its opening and closing brackets. Then, edit the mapping to satisfy the requirements outlined in the figure below.
-
-![image](https://user-images.githubusercontent.com/60980933/122103275-ad0c7380-cdd3-11eb-9a74-babe7442e5b3.png)
-
-The optimized mapping should look like the following: 
-```
+GET news_headlines/_search
 {
-  "mappings": {
-    "properties": {
-      "botanical_name": {
-        "enabled": false
-      },
-      "country_of_origin": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword"
-          }
-        }
-      },
-      "date_purchased": {
-        "type": "date"
-      },
-      "description": {
-        "type": "text"
-      },
-      "name": {
-        "type": "text"
-      },
-      "produce_type": {
-        "type": "keyword"
-      },
-      "quantity": {
-        "type": "long"
-      },
-      "unit_price": {
-        "type": "float"
-      },
-      "vendor_details": {
-        "enabled": false
+  "query": {
+    "range": {
+      "date": {
+        "gte": "2015-06-20",
+        "lte": "2015-09-22"
       }
     }
   }
 }
 ```
-![image](https://user-images.githubusercontent.com/60980933/122103954-68350c80-cdd4-11eb-82c4-83b47bc364dc.png)
 
-**Step 4: Create a new index with the optimized mapping from step 3.** 
+Expected response from Elasticsearch:
 
-Syntax:
+Elasticsearch returns a 200-success status and retrieves news headlines that were published between the specified date range. 
+
+![image](https://user-images.githubusercontent.com/60980933/125383839-4a1be700-e355-11eb-9f54-27fce956f6a3.png)
+
+### Error 5: 400 Unexpected character...: was expecting double-quote to start field name.
+
+In [Part 2](https://github.com/LisaHJung/Part-2-Understanding-the-relevance-of-your-search-with-Elasticsearch-and-Kibana-), we learned about the `multi_match` query. This query allows you to search for the same search terms in multiple fields at one time. 
+
+Suppose you wanted to search for the phrase "party planning" in the fields `headline` and `short_description` as shown below:
 ```
-PUT Name-of-your-final-index
+GET news_headlines/_search
 {
-  copy and paste your edited mapping here
+  "query": {
+    "multi_match": {
+      "query": "party planning",
+      "fields": [
+        "headline",
+        "short_description"
+      ]
+    },
+    "type": "phrase"
+  }
+}
+
+```
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP status starts with a 4, meaning that something isn't quite right with the request sent.
+
+![image](https://user-images.githubusercontent.com/60980933/126010686-324d860f-f532-4432-81f3-71894a19ee6c.png)
+
+If you look at the response, Elasticsearch lists the error type(line 5) as "parsing_exception" and the reason(line 6) as "[multi_match] malformed query, expected [END_OBJECT] but found [FIELD_NAME]".
+
+### Cause of Error 5
+
+This is a vague error message that does not really tell you what went wrong.
+
+However, we do know that the error is coming from somewhere around line 10, which suggests that the error may have something to do with the "type" parameter(line 11).
+
+When you check the opening and closing brackets from the outside in, you will realize that the "type" parameter is placed outside of the `multi_match` query.
+
+Move the "type" parameter up a line and move the comma from line 10 to line 9 as shown below and send the request:
+```
+GET news_headlines/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "party planning",
+      "fields": [
+        "headline",
+        "short_description"
+      ],
+      "type": "phrase"
+    }
+  }
 }
 ```
-Example: 
+
+Expected response from Elasticsearch: 
+
+Elastcsearch returns a 200-success(red box) response.
+
+All hits contain the phrase "party planning" in either the field "headline" or "short description" or both!
+
+![image](https://user-images.githubusercontent.com/60980933/125466228-7125d157-04c9-4315-a242-096598a5e183.png)
+
+### Error 6: 400 parsing_exception
+
+When we search for something, we often ask a multi-faceted question. For example, you may want to retrieve  entertainment news headlines published on "2018-04-12." 
+
+This question actually requires sending multiple queries in one request:
+
+1.A query that retrieves documents from the "ENTERTAINMENT" category
+2.A query that retrieves documents that were published on "2018-04-12"
+
+Let's say you are most familiar with the `match query` so you write the following request:
+
 ```
-PUT produce_index
+GET news_headlines/_search
 {
-  "mappings": {
-    "properties": {
-      "botanical_name": {
-        "enabled": false
-      },
-      "country_of_origin": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword"
-          }
-        }
-      },
-      "date_purchased": {
-        "type": "date"
-      },
-      "description": {
-        "type": "text"
-      },
-      "name": {
-        "type": "text"
-      },
-      "produce_type": {
-        "type": "keyword"
-      },
-      "quantity": {
-        "type": "long"
-      },
-      "unit_price": {
-        "type": "float"
-      },
-      "vendor_details": {
-        "enabled": false
-      }
+  "query": {
+    "match": {
+      "category": "ENTERTAINMENT",
+      "date":"2018-04-12"
     }
   }
 }
 ```
 Expected response from Elasticsearch:
 
-Elasticsearch creates a produce_index with the customized mapping we defined above! 
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP status starts with a 4, meaning that something is off with the query syntax.
 
-![image](https://user-images.githubusercontent.com/60980933/121618138-89d47380-ca23-11eb-96e3-68204da782dc.png)
+![image](https://user-images.githubusercontent.com/60980933/125475180-2f09f7e2-ab54-4a48-a0ac-622848035584.png)
 
-**Step 5: Check the mapping of the new index to make sure the all the fields have been mapped correctly**
+If you look at the response, Elasticsearch lists the error type(line 5) as "parsing_exception" and the reason(line 6) as "[match] query doesn't support multiple fields, found [category] and [date]". 
 
-Syntax:
+### Cause of Error 6
+
+Elasticsearch throws an error because a `match query` can query documents from only one field. Our request tried to query multiple fields using only one `match query`. 
+
+**Bool Query**
+
+In [Part 3](https://github.com/LisaHJung/Part-3-Running-full-text-queries-and-combined-queries-with-Elasticsearch-and-Kibana), we learned how to combine multiple queries into one request by using the `bool query`. 
+
+With the `bool query`, you can combine multiple queries into one request and you can further specify boolean clauses to narrow down your search results. 
+
+This query offers four clauses that you can choose from:
+1. must
+2. must_not
+3. should
+4. filter 
+
+You can mix and match any of these clauses to get the relevant search results you want. 
+
+In our use case, we have two queries:
+
+1.A query that retrieves documents from the "ENTERTAINMENT" category
+2.A query that retrieves documents that were published on "2018-04-12"
+
+The news headlines we want could be filtered into a yes or no category:
+
+Is the news headline from the "ENTERTAINMENT" category? **yes** or no
+Was the news headline published on "2018-04-12"? **yes** or no
+
+When documents could be filtered into either a yes or no category, we can use the filter clause and include two `match queries` within it:
+
 ```
-GET Name-of-test-index/_mapping
-```
-
-Example:
-```
-GET produce_index/_mapping
-```
-Expected response from Elasticsearch:
-
-Compared to the `dynamic mapping`, our optimized mapping looks more simple and concise!  The current mapping satisfies the requirements that are marked with green check marks. 
-
-![image](https://user-images.githubusercontent.com/60980933/121619679-3879b380-ca26-11eb-9ac9-ed19a52c05c2.png)
-![image](https://user-images.githubusercontent.com/60980933/121619466-e5076580-ca25-11eb-8c59-ec2caf3ddb50.png)
-![image](https://user-images.githubusercontent.com/60980933/121619506-f5b7db80-ca25-11eb-9916-fea11e8fd79d.png)
-
-
-**Step 6: Index your dataset into the new index**
-
-For simplicity's sake, we will index two documents. 
-
-*Index the first document*
-
-```
-POST produce_index/_doc
+GET news_headlines/_search
 {
-  "name": "Pineapple",
-  "botanical_name": "Ananas comosus",
-  "produce_type": "Fruit",
-  "country_of_origin": "New Zealand",
-  "date_purchased": "2020-06-02T12:15:35",
-  "quantity": 200,
-  "unit_price": 3.11,
-  "description": "a large juicy tropical fruit consisting of aromatic edible yellow flesh surrounded by a tough segmented skin and topped with a tuft of stiff leaves.These pineapples are sourced from New Zealand.",
-  "vendor_details": {
-    "vendor": "Tropical Fruit Growers of New Zealand",
-    "main_contact": "Hugh Rose",
-    "vendor_location": "Whangarei, New Zealand",
-    "preferred_vendor": true
-  }
-}
-```
-Expected response from Elasticsearch:
-
-Elasticsearch successfully indexes the first document. 
-![image](https://user-images.githubusercontent.com/60980933/121621403-5563b600-ca29-11eb-8ee9-83686a937fd2.png)
-
-*Index the second document*
-
-The second document has almost identical fields as the first document except that it has an extra field called "organic" set to true!
-```
-POST produce_index/_doc
-{
-  "name": "Mango",
-  "botanical_name": "Harum Manis",
-  "produce_type": "Fruit",
-  "country_of_origin": "Indonesia",
-  "organic": true,
-  "date_purchased": "2020-05-02T07:15:35",
-  "quantity": 500,
-  "unit_price": 1.5,
-  "description": "Mango Arumanis or Harum Manis is originated from East Java. Arumanis means harum dan manis or fragrant and sweet just like its taste. The ripe Mango Arumanis has dark green skin coated with thin grayish natural wax. The flesh is deep yellow, thick, and soft with little to no fiber. Mango Arumanis is best eaten when ripe.",
-  "vendor_details": {
-    "vendor": "Ayra Shezan Trading",
-    "main_contact": "Suharto",
-    "vendor_location": "Binjai, Indonesia",
-    "preferred_vendor": true
-  }
-}
-```
-Expected response from Elasticsearch:
-
-Elasticsearch successfully indexes the second document. 
-![image](https://user-images.githubusercontent.com/60980933/121621463-73c9b180-ca29-11eb-9849-955b8d7872fb.png)
-
-Let's see what happens to the mapping by sending this request below: 
-```
-GET produce_index/_mapping
-```
-Expected response from Elasticsearch:
-
-The new field("organic") and its field type(boolean) have been added to the mapping. This is in line with the rules of mapping we discussed earlier since you can add *new* fields to the mapping. We just cannot change the mapping of an *existing* field! 
-
-![image](https://user-images.githubusercontent.com/60980933/121694928-d2257d00-ca87-11eb-9141-77143d59081a.png)
-![image](https://user-images.githubusercontent.com/60980933/121694969-db164e80-ca87-11eb-9ddf-479af3077c46.png)
-
-#### What if you do need to make changes to the mapping of an existing field? 
-Let's say your client changed his mind. He wants to run only full text search on the field "botanical_name" we disabled earlier. 
-
-Remember, you CANNOT change the mapping of an *existing* field. If you do need to make changes to an existing field, you must create a new index with the desired mapping, then reindex all documents into the new index. 
-
-**STEP 1: Create a new index(produce_v2) with the latest mapping.**
-
-We removed the "enabled" parameter from the field "botanical_name" and changed its type to "text". 
-
-Example:
-```
-PUT produce_v2
-{
-  "mappings": {
-    "properties": {
-      "botanical_name": {
-        "type": "text"
-      },
-      "country_of_origin": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "match": {
+            "category": "ENTERTAINMENT"
+          }
+        },
+        {
+          "match": {
+            "date": "2018-04-12"
           }
         }
-      },
-      "date_purchased": {
-        "type": "date"
-      },
-      "description": {
-        "type": "text"
-      },
-      "name": {
-        "type": "text"
-      },
-      "organic": {
-        "type": "boolean"
-      },
-      "produce_type": {
-        "type": "keyword"
-      },
-      "quantity": {
-        "type": "long"
-      },
-      "unit_price": {
-        "type": "float"
-      },
-      "vendor_details": {
-        "type": "object",
-        "enabled": false
+      ]
+    }
+  }
+}
+
+```
+Expected response from Elastcsearch:
+
+Elasticsearch returns a 200-success HTTP status and shows the top 10 hits whose "category" field contains the value "ENTERTAINMENT" and the "date" field contains the value of "2018-04-12".
+
+![image](https://user-images.githubusercontent.com/60980933/126013105-1ee3f92b-561b-49f5-a37e-0550b8515279.png)
+
+## Errors Associated With Aggregations and Mapping
+
+Suppose you want to get the summary of categories that exist in our dataset. Since this requires summarizing your data, you decide to send the following aggregations request:
+
+```
+GET news_headlines/_search
+{
+  "aggs": {
+    "by_category": {
+      "terms": {
+        "field": "category"
       }
     }
   }
@@ -496,67 +495,367 @@ PUT produce_v2
 ```
 Expected response from Elasticsearch:
 
-Elasticsearch creates a new index(produce_v2) with the latest mapping. 
-![image](https://user-images.githubusercontent.com/60980933/121725821-fb093a80-caa6-11eb-8e76-aa84704fb951.png)
+By default, Elasticsearch returns both top 10 search hits and aggregations results. Notice that the top 10 search hits take up lines 16-168. 
 
-If you check the mapping, you will see that the filed "botanical_name" has been typed as text. 
+![image](https://user-images.githubusercontent.com/60980933/125504763-e19596a1-cbdd-4ab0-867b-8a4fb0220fdf.png)
 
-**View the mapping of produce_v2:**
+### Error 7: 400 Aggregation definition for [x], expected a [y].
+
+Let's say you are only interested in the aggregations results.
+
+You remember that you can add a "size" parameter and set it equal to 0 to avoid fetching the hits. 
+
+You send the following request to accomplish this task:
 ```
-GET produce_v2/_mapping
+GET news_headlines/_search
+{
+  "aggs": {
+    "size": 0,
+    "by_category": {
+      "terms": {
+        "field": "category"
+      }
+    }
+  }
+}
+```
+
+Expected response from Elasticsearch: 
+
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP status starts with a 4, meaning that there was a client error with the request sent.
+
+![image](https://user-images.githubusercontent.com/60980933/125509955-a2308af6-bf01-4cd5-b7e0-64f6327a0186.png)
+
+If you look at the response, Elasticsearch lists the error type(line 5) as "parsing_exception" and the reason(line 6) as "Aggregation definition for [size starts with a [VALUE_NUMBER], expected a [START_OBJECT]". 
+
+Something is off with our aggregations request syntax.  Let's take a look at the screenshots from the [Elastic documentation on aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.13/search-aggregations.html) and see what we missed. 
+
+**Screenshot from the documentation:**
+Pay close attention to the syntax of the aggregations request.
+![image](https://user-images.githubusercontent.com/60980933/125486600-ea21fb62-3b64-413f-9836-64b4bb4deff3.png)
+
+### Cause of Error 7
+
+This error is occurring because the "size" parameter was placed in a spot where Elasticsearch is expecting the name of the aggregations("my-agg-name").
+
+If you scroll down to the `Return only aggregation results` section in the documentation, you will see that the "size" parameter is placed outside of the aggregations request as shown below.
+
+**Screenshot from the documentation:**
+![image](https://user-images.githubusercontent.com/60980933/125486926-b83f052c-6291-4412-983a-2b838d5a7aee.png)
+
+Place the "size" parameter outside of the aggregations request and set it equal to 0 as shown below. 
+
+Send the following request: 
+```
+GET news_headlines/_search
+{
+  "size": 0,
+  "aggs": {
+    "by_category": {
+      "terms": {
+        "field": "category"
+      }
+    }
+  }
+}
+```
+
+Expected response from Elasticsearch:
+
+As intended, Elasticsearch does not retrieve the top 10 hits(line 16).
+
+You can see the aggregations results(an array of categories) without having to scroll through the hits. 
+
+![image](https://user-images.githubusercontent.com/60980933/125835366-af1dcf67-8892-4cfe-a182-1b50eb3850ce.png)
+
+### Error 8: 400 Field [x] of type [y] is not supported for z type of aggregation
+
+The next two errors(error 8 & 9) are related to the requests we have learned in [Part 4: Aggregations](https://github.com/LisaHJung/Part-4-Running-Aggregations-with-Elasticsearch-and-Kibana) and [Part 5: Mapping](https://github.com/LisaHJung/Part-5-Understanding-Mapping-with-Elasticsearch-and-Kibana) workshops. 
+
+During these workshops, we have worked with e-commerce dataset. 
+
+In Part 4, we have added the e-commerce dataset to Elasticsearch and named the index `ecommerce_original_data`.
+
+Then, we had to follow additional steps in `Set up data within Elasticsearch section` section in Part 4 repo.
+
+**Screenshot from Part 4 Repo:**
+
+To set up data within Elasticsearch, we implemented the following steps:
+![image](https://user-images.githubusercontent.com/60980933/126377626-92ecc3c6-62c9-4bed-8424-61c2f0b12e45.png)
+We never covered why we had to go through these steps. It was all because of the the error message we are about to see next!
+
+**From this point on, imagine that you had just added the e-commerce dataset into the `ecommerce_original_data index`. We have not completed steps 1 and 2** 
+
+In Part 4, we learned how to group data into buckets based on time interval. This type of aggregation request is called the `date_histogram aggregation`. 
+
+Suppose we wanted to group our data into 8 hour buckets and have sent the request below:
+```
+GET ecommerce_original_data/_search
+{
+  "size": 0,
+  "aggs": {
+    "transactions_by_8_hrs": {
+      "date_histogram": {
+        "field": "InvoiceDate",
+        "fixed_interval": "8h"
+      }
+    }
+  }
+}
 ```
 Expected response from Elasticsearch:
-![image](https://user-images.githubusercontent.com/60980933/121725730-e036c600-caa6-11eb-8b9d-5a9ca0a72a3c.png)
-![image](https://user-images.githubusercontent.com/60980933/121725765-e88f0100-caa6-11eb-9610-97cbf980e6c2.png)
 
-**STEP 2: Reindex the data from the original index(produce_index) to the one you just created(produce_v2).**
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP status starts with a 4, meaning that there was a client error with the request sent.
+
+![image](https://user-images.githubusercontent.com/60980933/125518829-1ba2cf30-368a-49dd-abfc-47c9e2521620.png)
+
+If you look at the response, Elasticsearch lists the error type(line 5) as "illegal_argument_exception" and the reason(line 6) as "Field [InvoiceDate] of type [keyword] is not supported for aggregation [date_histogram]".
+
+This error is different from syntax error messages we have gone over thus far. It says that the field type "keyword" is not supported for the `date_histogram aggregation`, which suggests that this error may have something to do with the mapping. 
+
+Let's check the mapping of the `ecommerce_original_data` index: 
+
+```
+GET ecommerce_original_data/_mapping
+```
+
+Expected response from Elasticsearch:
+
+You will see that the field "InvoiceDate" is typed as "keyword". 
+
+![image](https://user-images.githubusercontent.com/60980933/125519944-bc1ae5a0-72ad-43a1-9d0b-436c1d5b6504.png)
+
+### Cause of Error 8
+
+Let's take a look at the screenshots from the [Elastic documentation on date_histogram aggregations](https://www.elastic.co/guide/en/elasticsearch/reference/7.13/search-aggregations-bucket-datehistogram-aggregation.html).
+
+**Screenshot from the documentation:**
+
+![image](https://user-images.githubusercontent.com/60980933/126014337-d596889c-e3c8-457d-8017-6364b372d836.png)
+
+The first sentence gives us a valuable clue on why this error occurred!
+
+The `date_histogram aggregation` cannot be performed on a field typed as "keyword".
+
+To perform a `date_histogram aggregation` on the "InvoiceDate" field, the "InvoiceDate" field must be mapped as field type "date".
+
+But the mapping for the field "date" already exists. What are we going to do?! 
+
+**Remember, you cannot change the mapping of the existing field!** 
+
+**The only way you can accomplish this is to:**
+Step 1: Create a new index with the desired mapping 
+Step 2: Reindex data from the original index to the new one
+Step 3: Send the `date_histogram aggregation` request to the *new index*
+
+In Part 4, this is why we carried out steps 1 and 2! 
+
+**Step 1: Create a new index(ecommerce_data) with the following mapping**
+```
+PUT ecommerce_data
+{
+  "mappings": {
+    "properties": {
+      "Country": {
+        "type": "keyword"
+      },
+      "CustomerID": {
+        "type": "long"
+      },
+      "Description": {
+        "type": "text"
+      },
+      "InvoiceDate": {
+        "type": "date",
+        "format": "M/d/yyyy H:m"
+      },
+      "InvoiceNo": {
+        "type": "keyword"
+      },
+      "Quantity": {
+        "type": "long"
+      },
+      "StockCode": {
+        "type": "keyword"
+      },
+      "UnitPrice": {
+        "type": "double"
+      }
+    }
+  }
+}
+```
+
+**Side note about error associated with the `_meta` field**
+
+If you were following the steps from `Setting up data within Elasticsearch` section from Part 4, you probably have enountered the following error: 
+
+![image](https://user-images.githubusercontent.com/60980933/125847575-06ce48c0-43df-4cc0-8130-5af7b728b18c.png)
+
+This was due to a typo in the request where I forgot to include an underscore before meta in line 4. 
+
+![image](https://user-images.githubusercontent.com/60980933/125846876-f1aa9a5d-0d24-457f-a763-412850ae5e5f.png)
+
+The `_meta` field is a space used to include any notes that you want as a reference. It can be tips about common bug fixes or info about your app that you want to include. 
+
+The `_meta` field is completely optional. For our use case, it is not necessary so I have removed the `_meta` field from Part 4 repo since this issue came to my attention.
+
+Sincere apologies to anybody who has encountered that error while following along and thank you to @radhakrishnaakamat for catching the error!! 
+
+**Side note about adding the format of the "InvoiceDate" field**
+
+Let's look at the date format of the field "InvoiceDate":
+```
+GET ecommerce_original_data/_search 
+```
+Expected response from Elasticsearch:
+![image](https://user-images.githubusercontent.com/60980933/126386813-f8ed5939-a93f-4883-8f11-15f649f70368.png)
+
+The format of the InvoiceDate is "M/d/yyyy H:m".
+
+By default, Elasticsearch is configured to recognize iso8601 date format(ex. 2021-07-16T17:12:56.123Z).
+
+If the date format in your dataset differs from the iso8601 format, Elasticsearch will not recognize it and throw an error. 
+
+In order to prevent this from happening, we specify the date format of the "InvoiceDate" field("format": "M/d/yyyy H:m") within the mapping. 
+
+The symbols used in date format was formed using this [documentation](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html). 
+
+We have covered a LOT! Let's do a recap on why we are carrying out these steps in the first place.
+
+In Part 4, we added the e-commerce dataset to the `ecommerce_original_data` index where the field "InvoiceDate" was dynamically typed as "keyword".
+![image](https://user-images.githubusercontent.com/60980933/126386037-7bce3034-a9c9-4841-bf41-7cf67f259fcc.png)
+
+When we tried to run a `date_histogram aggregation` on the field "InvoiceDate", Elasticsearch threw an error saying that it can only perform the `date_histogram aggregation` on a field typed as "date".
+![image](https://user-images.githubusercontent.com/60980933/126417282-73f5a571-701f-4881-a5c9-f7cb953ccd5e.png)
+
+Since we could not change the mapping of an existing field "InvoiceDate", we had to carry out step 1 where we created a new index called `ecommerce_data` with the desired mapping for the field "InvoiceDate".
+![image](https://user-images.githubusercontent.com/60980933/126423539-8da82a73-10bb-46cc-86d7-98ab31bea30b.png)
+
+**Step 2: Reindex the data from original index("source") to the one you just created("dest").**
+
+At this point, we have a new index called `ecommerce_data` with the desired mapping. However, there is no data in this index.
+
+To correct that, we will send the following request to reindex the data from the `ecommerce_original_data` index to the `ecommerce_data` index:
 ```
 POST _reindex
 {
   "source": {
-    "index": "produce_index"
+    "index": "ecommerce_original_data"
   },
   "dest": {
-    "index": "produce_v2"
+    "index": "ecommerce_data"
   }
 }
 ```
 Expected response from Elasticsearch:
 
-This request reindexes data from the produce_index to the produce_v2 index. The produce_v2 index can now be used to run the requests that the client has specified.
+Elasticsearch successfully reindexes the e-commerce dataset from the `ecommerce_original_data` index to the `ecommerce_data` index.
 
-![image](https://user-images.githubusercontent.com/60980933/121726550-ee391680-caa7-11eb-89a9-be1d4416e0e3.png)
+![image](https://user-images.githubusercontent.com/60980933/130253070-263f58e5-2b25-42bc-842e-b14e62d230f8.png)
 
-#### Runtime Field
-![image](https://user-images.githubusercontent.com/60980933/122100555-8ac52680-cdd0-11eb-843f-556fa5313e15.png)
-![image](https://user-images.githubusercontent.com/60980933/121749036-3b78b080-cac7-11eb-8706-561a1bb61315.png)
-![image](https://user-images.githubusercontent.com/60980933/121749523-09b41980-cac8-11eb-8214-e986760e5d96.png)
+**Step 3: Send the date_histogram aggregations request to the new index(ecommerce_data).**
 
-**Step 1: Create a `runtime field` and add it to the mapping of the existing index.** 
+Now that the data has been reindexed to the new index, let’s send the `date_histogram aggregation` request we sent earlier.
 
-Syntax:
+The following is almost identical to the original request except that the index name has been changed to the new index(`ecommerce_data`).
 ```
-PUT Enter-name-of-index/_mapping
+GET ecommerce_data/_search
 {
-  "runtime": {
-    "Name-your-runtime-field-here": {
-      "type": "Specify-field-type-here",
-      "script": {
-        "source": "Specify the formula you want executed"
+  "size": 0,
+  "aggs": {
+    "transactions_by_8_hrs": {
+      "date_histogram": {
+        "field": "InvoiceDate",
+        "fixed_interval": "8h"
       }
     }
   }
 }
 ```
-Example:
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 200-success response. It divides the dataset into 8 hour buckets and returns them in the response. 
+
+![image](https://user-images.githubusercontent.com/60980933/125531405-875e198d-b229-441b-ae2e-d2428e6fbde1.png)
+
+### Error 9: 400 Found two aggregation type definitions in [x]: y and z
+
+One of the cool things about Elasticsearch is that you can build any combination of aggregations to answer more complex questions. 
+
+For example, let's say we want to get the daily revenue and the number of unique customers per day.
+
+This requires grouping data into daily buckets.
+![image](https://user-images.githubusercontent.com/60980933/126397086-b2910304-c065-4280-aa16-21ae566cbd7a.png)
+
+Within each bucket, we calculate the daily revenue and the number of unique customers per day.
+![image](https://user-images.githubusercontent.com/60980933/126397109-29416d46-c960-42f9-b6dd-c19f825c9b70.png)
+
+Let's say we wrote the following request to accomplish this task:
 ```
-PUT produce_v2/_mapping
+GET ecommerce_data/_search
 {
-  "runtime": {
-    "total": {
-      "type": "double",
-      "script": {
-        "source": "emit(doc['unit_price'].value* doc['quantity'].value)"
+  "size": 0,
+  "aggs": {
+    "transactions_per_day": {
+      "date_histogram": {
+        "field": "InvoiceDate",
+        "calendar_interval": "day"
+      },
+      "daily_revenue": {
+        "sum": {
+          "script": {
+            "source": "doc['UnitPrice'].value * doc['Quantity'].value"
+          }
+        }
+      },
+      "number_of_unique_customers_per_day": {
+        "cardinality": {
+          "field": "CustomerID"
+        }
+      }
+    }
+  }
+}
+```
+
+Expected response from Elasticsearch:
+
+Elasticsearch returns a 400-error along with the cause of the error in the response body. This HTTP error starts with a 4, meaning that there was a client error with the request sent.
+![image](https://user-images.githubusercontent.com/60980933/125664685-d60b2c4c-6c2f-44d0-839f-020a53f39419.png)
+
+### Cause of Error 9
+This error is occurring because the structure of the aggregations request is incorrect.
+
+In order to accomplish our goals, we first group data into daily buckets. Within each bucket, we calculate the daily revenue and the unique number of customers per day.
+
+Therefore, our request contains an aggregation(pink brackets) within an aggregation(blue brackets). 
+![image](https://user-images.githubusercontent.com/60980933/126399284-d34b63cf-72bc-4309-a9d8-3d24efa90ab7.png)
+
+The following demonstrates the correct aggregations request structure. Note the sub-aggregations that encloses the "daily_revenue" and the "number_of_unique_customers_per_day":
+```
+GET ecommerce_data/_search
+{
+  "size": 0,
+  "aggs": {
+    "transactions_per_day": {
+      "date_histogram": {
+        "field": "InvoiceDate",
+        "calendar_interval": "day"
+      },
+      "aggs": {
+        "daily_revenue": {
+          "sum": {
+            "script": {
+              "source": "doc['UnitPrice'].value * doc['Quantity'].value"
+            }
+          }
+        },
+        "number_of_unique_customers_per_day": {
+          "cardinality": {
+            "field": "CustomerID"
+          }
+        }
       }
     }
   }
@@ -564,89 +863,8 @@ PUT produce_v2/_mapping
 ```
 Expected response from Elasticsearch: 
 
-Elasticsearch successfully adds the `runtime field` to the mapping. 
-![image](https://user-images.githubusercontent.com/60980933/121744031-8393d500-cabf-11eb-850c-2e13cf79a92a.png)
+Elasticsearch returns a 200-success HTTP status. 
 
-**Step 2: Check the mapping:**
-```
-GET produce_v2/_mapping
-```
-Expected response from Elasticsearch:
+It groups the dataset into daily buckets. Within each bucket, the number of unique customers per day as well as the daily revenue are calculated.
 
-Elasticsearch adds a `runtime field` to the mapping(red box).
-
-![image](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/yi1u4cpx7gl65udiuvr3.png)
-
-Note that the `runtime field` is not listed under "properties" object which includes the fields in our documents. This is because the `runtime field` "total" is not indexed!
-
-**Step 3: Run a request on the `runtime field` to see it perform its magic!** 
-
-Please note that the following request does not aggregate the monthly expense here. We are running a simple aggregation request to demonstrate how `runtime field` works!  
-
-The following request runs a sum aggregation against the `runtime field` total of all documents in our index. 
-
-Syntax:
-```
-GET Enter_name_of_the_index_here/_search
-{
-  "size": 0,
-  "aggs": {
-    "Name your aggregations here": {
-      "Specify the aggregation type here": {
-        "field": "Name the field you want to aggregate on here"
-      }
-    }
-  }
-}
-```
-
-Example:
-```
-GET produce_v2/_search
-{
-  "size": 0,
-  "aggs": {
-    "total_expense": {
-      "sum": {
-        "field": "total"
-      }
-    }
-  }
-}
-```
-Expected response from Elasticsearch:
-
-When this request is sent, a `runtime field` called "total" is created and calculated for documents within the scope of our request(entire index). Then, the sum aggregation is ran on the field "total" over all documents in our index.
-
-![image](https://user-images.githubusercontent.com/60980933/121815555-50268700-cc34-11eb-8fb4-8112cb8e0806.png)
-
-The `runtime field` is only created and calculated when a request made on the `runtime field` is being executed. `Runtime fields` are not indexed so these do not take up disk space.  
-
-We also did not have to reindex in order to add a new field to existing documents. For more information on runtime fields, check out this [blog](https://www.elastic.co/blog/introducing-elasticsearch-runtime-fields)! 
-
-### Questions from the workshop
-**Q:  If possible please explain the _meta in mapping which was part of previous video.**
-
-A: Of course! _meta in mapping this question is referring to [workshop part 4](https://github.com/LisaHJung/Part-4-Running-Aggregations-with-Elasticsearch-and-Kibana).
-
-![image](https://user-images.githubusercontent.com/60980933/122953873-3247d900-d33c-11eb-8c77-d3f344ddbf43.png)
-
-I should have just removed the _meta part before I published this repo. Thank you for submitting a pull request on GitHub @radhakrishnaakamat!
-
-So the _meta field was automatically created by the ml file data visualizer. This is a field where you can store any information regarding the index or the app for developers who are managing it. Think of this field as a place where you can include information regarding the app so developers have info necessary to debug.
-
-The _meta field is optional and deleting the _meta field will not affect the mapping in any way whatsoever. I am going to delete this field in my part 4 workshop repo as it has been causing a lot of confusion! 
-
-**Q:  After you create a new mapping, how do you configure your ingest to use the new mapping?**
-
-
-A: I should have asked for clarification as this question can be interpreted in many different ways. 
-
-If I didn't interpret it correctly, please let me know via Twitter @LisaHJung and I will add the answer to this repo! 
-
-If you were referring to a situation where you have an old index with outdated mapping that needed to be changed:
-
-Remember, we cannot change the mapping of an existing field. Even if you add a new field to a mapping, it only adds the new field to the list of field names and types. It does not add the new field to documents that have been indexed prior to adding a new field to the mapping.
-
-You must create a new index with the desired mapping, then reindex documents from the old index to the new one, and direct requests to the new index! 
-
+![image](https://user-images.githubusercontent.com/60980933/125665068-f3fabd9a-0b72-41cd-b8d5-3238e75a594d.png)
